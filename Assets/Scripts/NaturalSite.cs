@@ -6,7 +6,11 @@ using UnityEngine;
 
 public abstract class NaturalSite : MonoBehaviour
 {
-    public static bool obstacle;    // Does this site block villager movement?
-    public static string siteName;
-    public static Sprite siteSprite;
+    public enum NaturalSiteType
+    {
+        TYPE_NONE,
+        TYPE_STONE,
+        TYPE_ORE
+    }
+    public static NaturalSiteType siteName;
 }

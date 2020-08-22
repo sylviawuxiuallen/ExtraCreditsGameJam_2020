@@ -153,20 +153,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1271a8e9d19da604e864be5a44e13ae2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buildingPrefabs:
-  - {fileID: 930506819053063753, guid: 0c6827fd0279fac4eb0c97859f26d1a8, type: 3}
   tilemap: {fileID: 1308950795}
-  tiles:
-  - {fileID: 11400000, guid: 970db8c86dfda164eb1342bfffac2ff3, type: 2}
-  - {fileID: 11400000, guid: 9975f9a93b996ec459bdd604bcc2e396, type: 2}
-  - {fileID: 11400000, guid: 8957455dbb8cee14ebed3ab6a4a896dd, type: 2}
-  - {fileID: 11400000, guid: c47a8adb3a24f384b8e9094ce2c1f7a9, type: 2}
   Resource_Tree: {fileID: 1774992211156212392, guid: e62104d07b39f7f4fb072fc3f3bf241e,
     type: 3}
   Resource_Stone: {fileID: 0}
   Resource_Ore: {fileID: 0}
   buildings: []
-  villagers: []
+  __TILES_KEY: 00000000010000000200000003000000
+  __TILES_VALUE:
+  - {fileID: 11400000, guid: 9975f9a93b996ec459bdd604bcc2e396, type: 2}
+  - {fileID: 11400000, guid: 8957455dbb8cee14ebed3ab6a4a896dd, type: 2}
+  - {fileID: 11400000, guid: 970db8c86dfda164eb1342bfffac2ff3, type: 2}
+  - {fileID: 11400000, guid: c47a8adb3a24f384b8e9094ce2c1f7a9, type: 2}
+  __TILEWEIGHT_KEY: 00000000010000000200000003000000
+  __TILEWEIGHT_VALUE: 050000000700000001000000ffffffff
+  __BUILDINGPREFABS_KEY: 00000000
+  __BUILDINGPREFABS_VALUE:
+  - {fileID: 930506819053063753, guid: 0c6827fd0279fac4eb0c97859f26d1a8, type: 3}
 --- !u!4 &507773851
 Transform:
   m_ObjectHideFlags: 0
@@ -207,7 +210,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mapManager: {fileID: 507773850}
-  resourceCountText: {fileID: 9105586766033650521}
+  __RESOURCECOUNTTEXTOBJECTS_KEY: 
+  __RESOURCECOUNTTEXTOBJECTS_VALUE: []
 --- !u!114 &507773854
 MonoBehaviour:
   m_ObjectHideFlags: 0

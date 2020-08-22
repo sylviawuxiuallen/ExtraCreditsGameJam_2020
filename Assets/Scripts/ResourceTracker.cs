@@ -7,61 +7,43 @@ public class ResourceTracker : MonoBehaviour
 {
     public MapManager mapManager;
 
-    public GameObject resourceCountText;
+    Dictionary<TownResourceID, int> resourceCounts;
 
-    int[] resourceCounts;
+    private Dictionary<TownResourceID, GameObject> resourceCountTextObjects;
+    public List<TownResourceID> __RESOURCECOUNTTEXTOBJECTS_KEY;
+    public List<GameObject> __RESOURCECOUNTTEXTOBJECTS_VALUE;
 
     private void Start()
     {
+        resourceCounts = new Dictionary<TownResourceID, int>();
+        resourceCountTextObjects = new Dictionary<TownResourceID, GameObject>();
+        for (int i = 0; i < __RESOURCECOUNTTEXTOBJECTS_KEY.Count; i++) { 
+            resourceCountTextObjects[__RESOURCECOUNTTEXTOBJECTS_KEY[i]] = __RESOURCECOUNTTEXTOBJECTS_VALUE[i]; }
         UpdateResourceCounts();
-        resourceCountText.GetComponent<Text>().text = PrintResourceCounts();
+        UpdateUI();
     }
 
-    public int[] UpdateResourceCounts()
+    public void UpdateResourceCounts()
     {
-        TownResourceID[] resourceTypes = (TownResourceID[])System.Enum.GetValues(typeof(TownResourceID));
-
-        resourceCounts = new int[resourceTypes.Length];
-
-        for(int i = 0; i < resourceTypes.Length; i++)
+        foreach (TownResourceID r in System.Enum.GetValues(typeof(TownResourceID)))
         {
-            foreach(GameObject b in mapManager.buildings)
+            resourceCounts[r] = 0;
+        }
+
+        foreach (Building b in mapManager.buildings)
+        {
+            foreach(TownResource r in b.storedResources)
             {
-                Building s = b.GetComponent<Building>();
-                foreach(TownResource r in s.storedResources)
-                {
-                    resourceCounts[(int)r.id] += r.amount;
-                }
+                resourceCounts[r.id] += r.amount;
             }
         }
-
-        return resourceCounts;
     }
 
-    public string PrintResourceCounts()
+    private void UpdateUI()
     {
-        TownResourceID[] resourceTypes = (TownResourceID[])System.Enum.GetValues(typeof(TownResourceID));
-
-        string[] countStrings = new string[resourceCounts.Length];
-
-        int i = 0;
-
-        foreach(int c in resourceCounts)
+        foreach (KeyValuePair<TownResourceID, GameObject> pair in resourceCountTextObjects)
         {
-            countStrings[i] = resourceTypes[i] + ": " + c + "   ";
-
-            i++;
+            pair.Value.GetComponent<Text>().text = resourceCounts[pair.Key].ToString();
         }
-
-        string result = "";
-
-        foreach(string s in countStrings)
-        {
-            Debug.Log(s);   
-            result = result + s;
-        }
-
-        return result;
     }
-
 }

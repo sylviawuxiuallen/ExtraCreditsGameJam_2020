@@ -22,6 +22,32 @@ public class TownResource : MonoBehaviour
         this.amount = a;
     }
 
+    public void deepCopy(TownResource a)
+    {
+        amount = a.amount;
+        id = a.id;
+    }
+
     public TownResourceID id;
     public int amount;
+
+    public static TownResource operator+ (TownResource a, TownResource b)
+    {
+        TownResource c = new TownResource(a.id, a.amount);
+        if(a.id == b.id)
+        {
+            c.amount += b.amount;
+        }
+        return c;
+    }
+
+    public static TownResource operator -(TownResource a, TownResource b)
+    {
+        TownResource c = new TownResource(a.id, a.amount);
+        if (a.id == b.id)
+        {
+            c.amount -= b.amount;
+        }
+        return c;
+    }
 }
