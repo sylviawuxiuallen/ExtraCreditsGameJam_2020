@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Resource_Tree : TownResource
+public class Resource_Tree : NaturalSite
 {
     void Start()
     {

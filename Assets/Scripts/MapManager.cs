@@ -1,8 +1,14 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using TreeEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+
+public enum BuildingType
+{
+    House
+}
 
 public class MapManager : MonoBehaviour
 {
@@ -18,6 +24,8 @@ public class MapManager : MonoBehaviour
         public TileType type;
         public GameObject obj;
     }
+
+    public GameObject[] buildingPrefabs;
 
     static int mapWidth = 200;
     static int mapHeight = 200;
@@ -35,6 +43,10 @@ public class MapManager : MonoBehaviour
     public GameObject Resource_Stone;
     public GameObject Resource_Ore;
 
+    public GameObject[,] objectGrid;
+    public List<GameObject> buildings;
+    public List<GameObject> villagers;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -43,6 +55,8 @@ public class MapManager : MonoBehaviour
         navGrid = new NavGrid();
         navGrid.generateGrid(mapWidth, mapHeight);
         tileObjects = new List<TileObject>[mapWidth, mapHeight];
+
+        objectGrid = new GameObject[mapWidth, mapHeight];
 
         //fill area with grass.
         for (int i = 0 - mapWidth /2; i < mapWidth/2; i++)
@@ -84,6 +98,11 @@ public class MapManager : MonoBehaviour
         path.drawPath(Color.red);
         float T2 = Time.realtimeSinceStartup;
         Debug.LogFormat("Time elapsed {0}ms",(T2-T1) * 1000);*/
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            PlaceBuilding(toGridSpace(Camera.main.ScreenToWorldPoint(Input.mousePosition)), BuildingType.House);
+        }
     }
 
     public Vector2Int toGridSpace(Vector3 pos)
@@ -120,6 +139,60 @@ public class MapManager : MonoBehaviour
                 }
                 navGrid.setWeight(pos, tileWeight[tileMatch]);
             }
+        }
+    }
+
+    public bool PlaceBuilding(Vector2 startCoords, BuildingType t)
+    {
+        int x = (int)Math.Round(startCoords.x);
+        int y = (int)Math.Round(startCoords.y);
+
+        GameObject newBuilding = Instantiate(buildingPrefabs[0], this.transform);
+        Building newBuildingScript = newBuilding.GetComponent<Building>();
+
+        int buildingWidth = newBuildingScript.width;
+        int buildingHeight = newBuildingScript.height;
+
+        if (x + buildingWidth >= mapWidth || y + buildingHeight >= mapHeight)
+        {
+            Debug.Log("Could not place building - not enough room on map!");
+            return false;
+        }
+
+        for (int i = x; i < x + buildingWidth; i++)
+        {
+            for (int j = y; j < y + buildingWidth; j++)
+            {
+                if (!CheckBuildable(i, j))
+                {
+                    Debug.Log("Could not place building - area blocked");
+                    return false;
+                }
+            }
+        }
+
+        for (int i = x; i < x + buildingWidth; i++)
+        {
+            for (int j = y; j < y + buildingHeight; j++)
+            {
+                objectGrid[i, j] = newBuilding;
+                tilemap.SetTile(new Vector3Int(i - mapWidth / 2, j - mapHeight / 2, 0), tiles[3]);
+            }
+        }
+        buildings.Add(newBuilding);
+
+        return true;
+    }
+
+    public bool CheckBuildable(int x, int y)
+    {
+        if (objectGrid[x, y] == null)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
 }

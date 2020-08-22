@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum TownResouceID
+public enum TownResourceID
 {
     RESOURCE_WOOD,
     RESOURCE_STONE,
-    RESOURCE_MEAL,
+    RESOURCE_METAL,
     RESOURCE_WHEAT,
     RESOURCE_FOOD,
     RESOURCE_TOOL,
@@ -14,8 +14,14 @@ public enum TownResouceID
     RESOURCE_TRADE,
     RESOURCE_GLASS
 }
-public abstract class TownResource : MonoBehaviour
+public class TownResource : MonoBehaviour
 {
-    public static string resourceName;
+    public TownResource(TownResourceID id, int a)
+    {
+        this.id = id;
+        this.amount = a;
+    }
+
+    public TownResourceID id;
     public int amount;
 }
