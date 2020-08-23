@@ -61,14 +61,13 @@
      <Compile Include="Assets\Scripts\BaseClasses\TownJob.cs" />
      <Compile Include="Assets\Scripts\BaseClasses\TownResource.cs" />
      <Compile Include="Assets\Scripts\BaseClasses\Villager.cs" />
-     <Compile Include="Assets\Scripts\Buildings\Building_House.cs" />
-     <Compile Include="Assets\Scripts\Buildings\Building_Warehouse.cs" />
      <Compile Include="Assets\Scripts\CameraManager.cs" />
      <Compile Include="Assets\Scripts\MapManager.cs" />
      <Compile Include="Assets\Scripts\NavGrid.cs" />
      <Compile Include="Assets\Scripts\NavPath.cs" />
      <Compile Include="Assets\Scripts\ResourceTracker.cs" />
      <Compile Include="Assets\Scripts\Resources\Resource_Tree.cs" />
+     <Compile Include="Assets\Scripts\TaskManager.cs" />
  <Reference Include="UnityEngine">
  <HintPath>E:/Documents/Code/Unity/2019.4.8f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
  </Reference>

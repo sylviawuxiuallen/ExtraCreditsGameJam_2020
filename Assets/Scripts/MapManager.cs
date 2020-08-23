@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using TreeEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -180,7 +181,7 @@ public class MapManager : MonoBehaviour
             return false;
         }
 
-        if (!CheckBuildable(minBounds, maxBounds))
+        if (!CheckBuildable(minBounds, maxBounds, newBuildingScript.NaturalSiteType))
         {
             Debug.Log("Could not place building - area blocked");
             return false;
@@ -192,6 +193,9 @@ public class MapManager : MonoBehaviour
         obj.type = TileType.TILE_BUILDING;
         obj.obj = newBuilding;
 
+        Building bd = newBuilding.GetComponent<Building>();
+        bd.position = minBounds;
+        bd.entrance = bd.entrance + minBounds;
         buildings.Add(newBuilding.GetComponent<Building>());
 
         for (int _x = minBounds.x; _x < maxBounds.x; _x++)
@@ -204,18 +208,54 @@ public class MapManager : MonoBehaviour
         return true;
     }
 
-    public bool CheckBuildable(Vector2Int min, Vector2Int max)
+    private bool CheckBuildable(Vector2Int min, Vector2Int max, NaturalSite.NaturalSiteType type)
     {
+        bool hasSite = false;
+        if (type == NaturalSite.NaturalSiteType.TYPE_NONE) hasSite = true;
         for(int x = min.x; x < max.x; x++)
         {
             for(int y = min.y; y< max.y; y++)
             {
-                if( tileObjects[x,y].Count > 0)
+                if( tileObjects[x,y].Count == 1)
                 {
-                    return false;
+                    if(tileObjects[x,y][0].type == TileType.TILE_RESOURCE)
+                    {
+                        NaturalSite ns = tileObjects[x, y][0].obj.GetComponent<NaturalSite>();
+                        
+                        if (ns.siteName != type)
+                        {
+                            return false;
+                        } else
+                        {
+                            hasSite = true;
+                        }
+                    }
+                }
+                if (tileObjects[x, y].Count > 1) return false;
+            }
+        }
+        return hasSite;
+    }
+
+    public void moveVillager(Vector2Int from, Vector2Int to, int Id)
+    {
+        if (tileObjects[from.x, from.y].Count != 0 &&
+            from.x > 0 && from.y > 0 && from.x < mapWidth && from.y < mapHeight &&
+            to.x > 0 && to.y > 0 && to.x < mapWidth && to.y < mapHeight)
+        {
+            //find villager.
+            foreach(TileObject tobj in tileObjects[from.x, from.y])
+            {
+                if(tobj.type == TileType.TILE_VILLAGER)
+                {
+                    if(tobj.obj.GetComponent<Villager>().ID == Id)
+                    {
+                        //this is our villager.
+                        tileObjects[from.x, from.y].Remove(tobj);
+                        tileObjects[to.x, to.x].Add(tobj);
+                    }
                 }
             }
         }
-        return true;
     }
 }

@@ -26,30 +26,21 @@ public abstract class Building : MonoBehaviour
 
     public int width;   // all buildings are rectangular
     public int height;
-    protected int x;    // coordinates correspond to bottom-left corner of the building
-    protected int y;
-
-    public int woodCost; // The resource costs to create the building
-    public int stoneCost;
-    public int metalCost;
-    public int toolCost;
-    public int glassCost;
+    public Vector2Int position;
+    public Vector2Int entrance;
 
     public NaturalSite.NaturalSiteType NaturalSiteType; // a natural site that the building must be built on, e.g. an ore vein
     public BuildingType type;
+    public VillagerProfession profession;
 
-    public TownJob[] jobs;   // the jobs that the building allows
+    public TownJob job;   // the jobs that the building allows
 
     public int storageCapacity;  // the amount of resources the building can store
     public List<TownResource> storedResources;    // which resources are currently stored
 
-    public int housingCapacity;  // how many villagers the building can house
+    public float builtPercentage = 0.0f;
 
-    /// <summary>
-    /// A multiplier applied to how fast workers at the building can work. Decreases when storage capacity is exceeded
-    /// </summary>
-    /// <returns></returns>
-    public abstract float BuildingEfficiency(); 
+    public Dictionary<TownResourceID, int> constructionCost;
 
     public int StoredResourcesCount()
     {
@@ -63,15 +54,7 @@ public abstract class Building : MonoBehaviour
         return count;
     }
 
-    public void SetLocation(int x, int y)
-    {
-        this.x = x;
-        this.y = y;
-    }
-
-    
-
-    public TownResource RetrieveResources(TownResourceID resourceID, int limit)
+    public TownResource RemoveResource(TownResourceID resourceID, int limit)
     {
         foreach (TownResource r in storedResources)
         {
@@ -93,7 +76,7 @@ public abstract class Building : MonoBehaviour
         return null;
     }
 
-    public void StoreResources(TownResource resourceToStore)
+    public void AddResource(TownResource resourceToStore)
     {
         bool newResource = true;
         //TODO : StoredResources is a list, no need for a for-each loop.

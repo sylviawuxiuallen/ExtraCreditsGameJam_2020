@@ -13,5 +13,5 @@ public abstract class NaturalSite : MonoBehaviour
         TYPE_ORE,
         TYPE_TREE
     }
-    public static NaturalSiteType siteName;
+    public NaturalSiteType siteName;
 }
