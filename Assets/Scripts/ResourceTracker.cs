@@ -9,6 +9,7 @@ public class ResourceTracker : MonoBehaviour
 
     Dictionary<TownResourceID, int> resourceCounts;             // The actual amount of resources in storage
     Dictionary<TownResourceID, int> availableResourceCounts;    // The amount of resources that haven't been reserved yet
+    Dictionary<TownResourceID, int> reservedResourceCounts;     // The amount of resources that are reserved for pending/current jobs
 
     private Dictionary<TownResourceID, GameObject> resourceCountTextObjects;
     public List<TownResourceID> __RESOURCECOUNTTEXTOBJECTS_KEY;
@@ -17,9 +18,13 @@ public class ResourceTracker : MonoBehaviour
     private void Start()
     {
         resourceCounts = new Dictionary<TownResourceID, int>();
-        foreach(TownResourceID r in System.Enum.GetValues(typeof(TownResourceID)))
+        availableResourceCounts = new Dictionary<TownResourceID, int>();
+        reservedResourceCounts = new Dictionary<TownResourceID, int>();
+        foreach (TownResourceID r in System.Enum.GetValues(typeof(TownResourceID)))
         {
             resourceCounts.Add(r, 0);
+            availableResourceCounts.Add(r, 0);
+            reservedResourceCounts.Add(r, 0);
         }
         resourceCountTextObjects = new Dictionary<TownResourceID, GameObject>();
         for (int i = 0; i < __RESOURCECOUNTTEXTOBJECTS_KEY.Count; i++) { 
@@ -32,7 +37,7 @@ public class ResourceTracker : MonoBehaviour
     {
         foreach(KeyValuePair<TownResourceID, int> s in spendAmounts)
         {
-            if(s.Value > resourceCounts[s.Key])
+            if(s.Value > availableResourceCounts[s.Key])
             {
                 return false;
             }
@@ -40,7 +45,8 @@ public class ResourceTracker : MonoBehaviour
 
         foreach (KeyValuePair<TownResourceID, int> s in spendAmounts)
         {
-            resourceCounts[s.Key] -= s.Value;
+            availableResourceCounts[s.Key] -= s.Value;
+            reservedResourceCounts[s.Key] += s.Value;
             Debug.Log(s.Value);
         }
 
@@ -62,13 +68,18 @@ public class ResourceTracker : MonoBehaviour
                 resourceCounts[r.id] += r.amount;
             }
         }
+
+        foreach(TownResourceID r in System.Enum.GetValues(typeof(TownResourceID)))
+        {
+            availableResourceCounts[r] = resourceCounts[r] - reservedResourceCounts[r];
+        }
     }
 
     private void UpdateUI()
     {
         foreach (KeyValuePair<TownResourceID, GameObject> pair in resourceCountTextObjects)
         {
-            pair.Value.GetComponent<Text>().text = resourceCounts[pair.Key].ToString();
+            pair.Value.GetComponent<Text>().text = availableResourceCounts[pair.Key].ToString();
         }
     }
 }

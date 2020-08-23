@@ -195,7 +195,7 @@ public class MapManager : MonoBehaviour
 
         if (!freeBuilding)
         {
-            if (!this.GetComponent<ResourceTracker>().TrySpendResources(buildingCosts))
+            if (!this.GetComponent<ResourceTracker>().TryReserveResources(buildingCosts))
             {
                 Debug.Log("Not enough resources");
                 return null;

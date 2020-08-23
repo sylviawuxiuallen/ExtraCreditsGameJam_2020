@@ -51,7 +51,7 @@ MonoBehaviour:
   constructionTime: 0
   NaturalSiteType: 0
   type: 1
-  storageCapacity: 200
+  storageCapacity: 400
   storedResources: []
   housingCapacity: 0
   woodCost: 25
