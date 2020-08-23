@@ -31,7 +31,6 @@ public abstract class Building : MonoBehaviour
 
     public NaturalSite.NaturalSiteType NaturalSiteType; // a natural site that the building must be built on, e.g. an ore vein
     public BuildingType type;
-    public VillagerProfession profession;
 
     public TownJob job;   // the jobs that the building allows
 
@@ -54,32 +53,27 @@ public abstract class Building : MonoBehaviour
         return count;
     }
 
-    public TownResource RemoveResource(TownResourceID resourceID, int limit)
+    public void RemoveResource(TownResourceID resourceID, int amount)
     {
         foreach (TownResource r in storedResources)
         {
             if (r.id == resourceID)
             {
-                if (r.amount < limit)
+                if (r.amount < amount)
                 {
                     storedResources.Remove(r);
-                    return r;
                 }
                 else
                 {
-                    r.amount -= limit;
-                    return new TownResource(resourceID, limit);
+                    r.amount -= amount;
                 }
             }
         }
-
-        return null;
     }
 
     public void AddResource(TownResource resourceToStore)
     {
         bool newResource = true;
-        //TODO : StoredResources is a list, no need for a for-each loop.
         foreach (TownResource r in storedResources)
         {
             if (r.id == resourceToStore.id)

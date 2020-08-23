@@ -1,32 +1,23 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Unity.Jobs;
 using UnityEditor;
 using UnityEngine;
 
 
-public enum VillagerProfession
+public enum VillagerJob
 {
     CHILD,
     HAULER,
-    LOGGER,
-    MINER,
-    MASON,
-    FARMER,
-    BAKER,
-    BREWER,
-    SMITH,
-    ARTISAN,
-    MAYOR,
-    CLERK,
-    TAVERNKEEP,
-    TRADER,
-    DOCTOR
+    WORKER,
+    IDLE
 }
 public class Villager : MonoBehaviour
 {
     public Skill[] skills;
-    public VillagerProfession profession;
+    public VillagerJob currentJob;
     
     public Sprite sprite;
 
@@ -54,19 +45,50 @@ public class Villager : MonoBehaviour
 
     Villager()
     {
+        baseCarryCapacity = 100;
         path = new NavPath();
         age = 21;
         gender = 0.5f > Random.value;
         gay = false;
         pathTo = transform.position;
         pathFrom = transform.position;
+        position = map.toGridSpace(pathTo);
         pathAlpha = 0;
+    }
+
+    void Start()
+    {
+        InvokeRepeating("UpdateVillager", 0.0f, 0.5f);
     }
 
     void FixedUpdate()
     {
-        pathAlpha += Time.deltaTime * 5;
-        transform.position = Vector3.Lerp(pathFrom, pathTo, pathAlpha);
+        if (pathAlpha > 0.95f)
+        {
+            if (path.path.Count == 0 || path.positionInPath == path.path.Count - 1)
+            {
+                //No more path.
+                pathAlpha = 0;
+                position = map.toGridSpace(pathTo);
+                map.moveVillager(map.toGridSpace(pathFrom), map.toGridSpace(pathTo), ID);
+                pathFrom = pathTo;
+                path.positionInPath++;
+                pathTo = map.navGrid.toWorldSpace(path.path[path.positionInPath]);
+                //is new coords blocked?
+                if(map.navGrid.weights[path.path[path.positionInPath].x, path.path[path.positionInPath].y] == -1)
+                {
+                    //blocked, recalculate path.
+                    setPath(position, path.path[path.path.Count -1]);
+                    pathTo = pathFrom;
+                }
+            }
+            else
+            {
+                //more path, move along path.
+                pathAlpha += Time.deltaTime * 5;
+                transform.position = Vector3.Lerp(pathFrom, pathTo, pathAlpha);
+            }
+        }
     }
 
     public void assignWorkTask(JobWorkTask task)
@@ -74,7 +96,7 @@ public class Villager : MonoBehaviour
         workTask = task;
         isWorking = true;
         //recalculate path
-        path = getPath(position, workTask.building.entrance);
+        setPath(position, workTask.building.entrance);
     }
 
     public void assignHaulTask(JobHaulTask task)
@@ -82,49 +104,95 @@ public class Villager : MonoBehaviour
         haulTask = task;
         isWorking = false;
         //recalculate path
-        path = getPath(position, haulTask.from.entrance);
+        setPath(position, haulTask.from.entrance);
     }
 
-    private void moveAlongPath()
+    private void UpdateVillager()
     {
-        if(path.path.Count == 0 || path.positionInPath == path.path.Count -1)
+        /*public struct JobWorkTask
+{
+    public Building building;
+    public TownResource consumed;
+    public TownResource produced;
+    public float timeToComplete;
+    public float progress;
+}
+         */
+        //reached end of path.
+        if (isWorking)
         {
-            //reached end of path.
-            if(isWorking)
+            //do work task
+            if (!workTask.finished)
             {
-                //do work task
-                if (!workTask.Equals(null))
-                {
-                    //there actually exists a task.
-                }
-            } else
-            {
-                //do hauling task
-                if (!haulTask.Equals(null))
-                {
-                    //there actually exists a task.
-                    if(position == haulTask.from.entrance)
-                    {
-                        //go to to 
-                        path = getPath(position, haulTask.to.entrance);
-                        //take resource from building.
-                        
-                    }
-                }
+                //there actually exists a task.v
+
             }
         } else
         {
-            //more path, move along path.
-            if (pathAlpha > 0.95f)
+            //do hauling task
+            if (!haulTask.finished)
             {
-                //moved along path.
-                pathAlpha = 0;
-                pathFrom = pathTo;
-                path.positionInPath++;
-                pathTo = map.navGrid.toWorldSpace(path.path[path.positionInPath]);
+                //there actually exists a task.
+                if(position == haulTask.from.entrance && haulTask.stage == 0)
+                {
+                    //am currently at the giver
+                    setPath(position, haulTask.to.entrance);
+                    //take resource from building.
+                    
+                    foreach(TownResource tr in haulTask.from.storedResources)
+                    {
+                        if(tr.id == haulTask.item)
+                        {
+                            //how many resources does the building have?
+                            if (tr.amount < 100)
+                            {
+                                //can take all
+                                carriedResource.id = haulTask.item;
+                                if(haulTask.amount > tr.amount)
+                                {
+                                    carriedResource.amount = tr.amount;
+                                } else
+                                {
+                                    carriedResource.amount = haulTask.amount;
+                                }
+                                haulTask.from.RemoveResource(haulTask.item, haulTask.amount);
+                            }
+                            else
+                            {
+                                //take a portion.
+                                carriedResource.id = haulTask.item;
+                                carriedResource.amount = 100;
+                                haulTask.from.RemoveResource(haulTask.item, 100);
+                            }
+                        }
+                    }
+                    haulTask.stage = 1;
+                }
+
+                if(position == haulTask.to.entrance && haulTask.stage == 1)
+                {
+                    //am currently at the reciver
+                    haulTask.to.AddResource(carriedResource);
+                    haulTask.amount -= carriedResource.amount;
+                    carriedResource.amount = 0;
+                    if(haulTask.amount > 0)
+                    {
+                        haulTask.stage = 0;
+                        setPath(position, haulTask.from.entrance);
+                    } else
+                    {
+                        //task is over. it's done.
+                        manager.jobFinished(this);
+                        haulTask.finished = true;
+                    }
+                }
             }
         }
     }
+
+    /// <summary>
+    /// MULTITHREADING BULLSHIT. ALL YE WHO ENTER HERE BEWARE OF BULLSHITTERY.
+    /// </summary>
 
     struct getPathJob : IJob
     {
@@ -138,7 +206,7 @@ public class Villager : MonoBehaviour
             path = grid.findPath(from, to);
         }
     }
-    public NavPath getPath(Vector2Int from, Vector2Int to)
+    public void setPath(Vector2Int from, Vector2Int to)
     {
         getPathJob job = new getPathJob();
         job.from = from;
@@ -147,9 +215,13 @@ public class Villager : MonoBehaviour
         job.grid = map.navGrid;
 
         JobHandle handle = job.Schedule();
+        //once finished, set the path
+        StartCoroutine(WaitForPathFinding(handle,job));
+    }
 
-        handle.Complete();
-
-        return job.path;
+    private IEnumerator WaitForPathFinding(JobHandle handle, getPathJob job)
+    {
+        yield return new WaitUntil(() => handle.IsCompleted);
+        path = job.path;
     }
 }
