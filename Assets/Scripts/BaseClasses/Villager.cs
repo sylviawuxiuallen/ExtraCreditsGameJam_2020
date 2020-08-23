@@ -35,6 +35,7 @@ public class Villager : MonoBehaviour
     public TaskManager manager;
 
     public bool isWorking;
+    public bool isHauling;
     public JobWorkTask workTask;
     public JobHaulTask haulTask;
 
@@ -48,23 +49,31 @@ public class Villager : MonoBehaviour
         baseCarryCapacity = 100;
         path = new NavPath();
         age = 21;
-        gender = 0.5f > Random.value;
+        // gender = 0.5f > Random.value;
         gay = false;
-        pathTo = transform.position;
-        pathFrom = transform.position;
-        position = map.toGridSpace(pathTo);
         pathAlpha = 0;
+        isWorking = false;
+
+        haulTask.finished = true;
     }
 
     void Start()
     {
-        InvokeRepeating("UpdateVillager", 0.0f, 0.5f);
+        gender = 0.5f > Random.value;
+        pathTo = transform.position;
+        pathFrom = transform.position;
+        position = map.toGridSpace(pathTo);
+
+        setPath(position, position + new Vector2Int(0, -3));
+
+        // InvokeRepeating("UpdateVillager", 0.0f, 0.5f);
     }
 
     void FixedUpdate()
     {
         if (pathAlpha > 0.95f)
         {
+
             if (path.path.Count == 0 || path.positionInPath == path.path.Count - 1)
             {
                 //No more path.
@@ -89,6 +98,11 @@ public class Villager : MonoBehaviour
                 transform.position = Vector3.Lerp(pathFrom, pathTo, pathAlpha);
             }
         }
+    }
+
+    public void MoveToLocation(Vector2Int destination)
+    {
+        setPath(position, destination);
     }
 
     public void assignWorkTask(JobWorkTask task)
@@ -139,18 +153,18 @@ public class Villager : MonoBehaviour
                     setPath(position, haulTask.to.entrance);
                     //take resource from building.
                     
-                    foreach(TownResource tr in haulTask.from.storedResources)
+                    foreach(KeyValuePair<TownResourceID, int> tr in haulTask.from.storedResources)
                     {
-                        if(tr.id == haulTask.item)
+                        if(tr.Key == haulTask.item)
                         {
                             //how many resources does the building have?
-                            if (tr.amount < 100)
+                            if (tr.Value < 100)
                             {
                                 //can take all
                                 carriedResource.id = haulTask.item;
-                                if(haulTask.amount > tr.amount)
+                                if(haulTask.amount > tr.Value)
                                 {
-                                    carriedResource.amount = tr.amount;
+                                    carriedResource.amount = tr.Value;
                                 } else
                                 {
                                     carriedResource.amount = haulTask.amount;
@@ -172,7 +186,7 @@ public class Villager : MonoBehaviour
                 if(position == haulTask.to.entrance && haulTask.stage == 1)
                 {
                     //am currently at the reciver
-                    haulTask.to.AddResource(carriedResource);
+                    haulTask.to.AddResource(carriedResource.id, carriedResource.amount);
                     haulTask.amount -= carriedResource.amount;
                     carriedResource.amount = 0;
                     if(haulTask.amount > 0)

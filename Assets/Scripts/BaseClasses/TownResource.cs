@@ -14,7 +14,7 @@ public enum TownResourceID
     RESOURCE_TRADE,
     RESOURCE_GLASS
 }
-public class TownResource : MonoBehaviour
+public class TownResource
 {
     public TownResource(TownResourceID id, int a)
     {

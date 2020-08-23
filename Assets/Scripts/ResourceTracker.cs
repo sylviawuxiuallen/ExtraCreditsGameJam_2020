@@ -47,7 +47,6 @@ public class ResourceTracker : MonoBehaviour
         {
             availableResourceCounts[s.Key] -= s.Value;
             reservedResourceCounts[s.Key] += s.Value;
-            Debug.Log(s.Value);
         }
 
         UpdateUI();
@@ -63,9 +62,12 @@ public class ResourceTracker : MonoBehaviour
 
         foreach (Building b in mapManager.buildings)
         {
-            foreach(TownResource r in b.storedResources)
+            if (b.storedResources != null)
             {
-                resourceCounts[r.id] += r.amount;
+                foreach (KeyValuePair<TownResourceID, int> r in b.storedResources)
+                {
+                    resourceCounts[r.Key] += r.Value;
+                }
             }
         }
 
@@ -75,7 +77,7 @@ public class ResourceTracker : MonoBehaviour
         }
     }
 
-    private void UpdateUI()
+    public void UpdateUI()
     {
         foreach (KeyValuePair<TownResourceID, GameObject> pair in resourceCountTextObjects)
         {

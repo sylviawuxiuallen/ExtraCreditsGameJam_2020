@@ -486,6 +486,8 @@ MonoBehaviour:
   placeHouse: 49
   placeWarehouse: 50
   placeLumberMill: 51
+  villagerPrefab: {fileID: 1908675240704129628, guid: 365dc51c07bb32249b18a4386ab9e645,
+    type: 3}
 --- !u!4 &507773851
 Transform:
   m_ObjectHideFlags: 0

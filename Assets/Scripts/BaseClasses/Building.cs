@@ -30,8 +30,8 @@ public abstract class Building : MonoBehaviour
     public Vector2Int position; // bottom-left corner
     public Vector2Int entrance; // relative to position
 
-    bool isConstructed;
-    bool underConstruction;
+    public bool isConstructed;
+    public bool underConstruction;
     public float builtPercentage = 0.0f;
     public float constructionTime;  // amount of time, in seconds, required to create the building
 
@@ -41,7 +41,7 @@ public abstract class Building : MonoBehaviour
     public TownJob[] jobs;   // the jobs that the building allows
 
     public int storageCapacity;  // the amount of resources the building can store
-    public List<TownResource> storedResources;    // which resources are currently stored
+    public Dictionary<TownResourceID, int> storedResources;    // which resources are currently stored
 
     public int housingCapacity;
 
@@ -53,10 +53,14 @@ public abstract class Building : MonoBehaviour
     public int toolCost;
     public int glassCost;
 
+    public ResourceTracker resourceTracker;
+
     private void Start()
     {
         isConstructed = false;
         underConstruction = true;
+
+        InitializeStoredResources();
     }
 
     private void Update()
@@ -89,47 +93,49 @@ public abstract class Building : MonoBehaviour
     {
         int count = 0;
 
-        foreach (TownResource r in storedResources)
+        foreach (KeyValuePair<TownResourceID, int> r in storedResources)
         {
-            count += r.amount;
+            count += r.Value;
         }
 
         return count;
     }
 
-    public void RemoveResource(TownResourceID resourceID, int amount)
+    public int RemoveResource(TownResourceID resourceID, int amountWanted)
     {
-        foreach (TownResource r in storedResources)
+        // Tries to retrieve the resources requested. If there's not enough, return as much as possible
+
+        if (storedResources[resourceID] >= amountWanted)
         {
-            if (r.id == resourceID)
-            {
-                if (r.amount < amount)
-                {
-                    storedResources.Remove(r);
-                }
-                else
-                {
-                    r.amount -= amount;
-                }
-            }
+            storedResources[resourceID] -= amountWanted;
+            return amountWanted;
         }
+        else
+        {
+            int amountRemoved = storedResources[resourceID];
+            storedResources[resourceID] = 0;
+            return amountRemoved;
+        }
+        
     }
 
-    public void AddResource(TownResource resourceToStore)
+    public void AddResource(TownResourceID resourceID, int amountToStore)
     {
-        bool newResource = true;
-        foreach (TownResource r in storedResources)
-        {
-            if (r.id == resourceToStore.id)
-            {
-                r.amount += resourceToStore.amount;
-                newResource = false;
-            }
-        }
+        InitializeStoredResources();
+        storedResources[resourceID] += amountToStore;
+    }
 
-        if (newResource)
+    public void InitializeStoredResources()
+    {
+        // This is put in a separate function because in some cases, AddResource may be called before Start,
+        // requiring storedResources to be initialized at that time.
+        if (storedResources == null)
         {
-            storedResources.Add(resourceToStore);
+            storedResources = new Dictionary<TownResourceID, int>();
+            foreach (TownResourceID r in System.Enum.GetValues(typeof(TownResourceID)))
+            {
+                storedResources.Add(r, 0);
+            }
         }
     }
 

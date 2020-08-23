@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using TreeEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-
-
+using UnityEngine.UIElements;
 
 public class MapManager : MonoBehaviour
 {
@@ -60,6 +60,8 @@ public class MapManager : MonoBehaviour
     public KeyCode placeWarehouse = KeyCode.Alpha2;
     public KeyCode placeLumberMill = KeyCode.Alpha3;
 
+    public GameObject villagerPrefab;
+
     static int mapWidth = 200;
     static int mapHeight = 200;
     // Start is called before the first frame update
@@ -67,16 +69,22 @@ public class MapManager : MonoBehaviour
     {
         //Initalize Dictionaries
         tiles = new Dictionary<TileBaseType, TileBase>();
-        for (int i = 0; i < __TILES_KEY.Count; i++){
-            tiles[__TILES_KEY[i]] = __TILES_VALUE[i];}
+        for (int i = 0; i < __TILES_KEY.Count; i++)
+        {
+            tiles[__TILES_KEY[i]] = __TILES_VALUE[i];
+        }
 
         tileWeight = new Dictionary<TileBaseType, int>();
-        for (int i = 0; i < __TILEWEIGHT_KEY.Count; i++){
-            tileWeight[__TILEWEIGHT_KEY[i]] = __TILEWEIGHT_VALUE[i];}
+        for (int i = 0; i < __TILEWEIGHT_KEY.Count; i++)
+        {
+            tileWeight[__TILEWEIGHT_KEY[i]] = __TILEWEIGHT_VALUE[i];
+        }
 
         buildingPrefabs = new Dictionary<Building.BuildingType, GameObject>();
-        for (int i = 0; i < __BUILDINGPREFABS_KEY.Count; i++){
-            buildingPrefabs[__BUILDINGPREFABS_KEY[i]] = __BUILDINGPREFABS_VALUE[i];}
+        for (int i = 0; i < __BUILDINGPREFABS_KEY.Count; i++)
+        {
+            buildingPrefabs[__BUILDINGPREFABS_KEY[i]] = __BUILDINGPREFABS_VALUE[i];
+        }
 
         buildings = new List<Building>();
         navGrid = new NavGrid();
@@ -85,19 +93,19 @@ public class MapManager : MonoBehaviour
 
         Debug.Log("Generating map....");
         //fill area with grass.
-        for (int i = 0 - mapWidth /2; i < mapWidth/2; i++)
+        for (int i = 0 - mapWidth / 2; i < mapWidth / 2; i++)
         {
-            for(int j = 0 - mapHeight/2; j < mapHeight/2; j++)
+            for (int j = 0 - mapHeight / 2; j < mapHeight / 2; j++)
             {
                 Vector2Int gridSpace = navGrid.toGridSpace(new Vector3(i, j, 0));
                 tilemap.SetTile(new Vector3Int(i, j, 0), tiles[TileBaseType.TILEBASE_GRASS]);
-                tileObjects[gridSpace.x,gridSpace.y] = new List<TileObject>();
+                tileObjects[gridSpace.x, gridSpace.y] = new List<TileObject>();
                 //forrests
                 //use a perlin noise
                 float perlin =
                     Mathf.PerlinNoise(gridSpace.x * 0.025f, gridSpace.y * 0.025f) * 0.5f +
                     Mathf.PerlinNoise(gridSpace.x * 0.075f, gridSpace.y * 0.075f) * 0.5f;
-                if(perlin >= 0.45f)
+                if (perlin >= 0.45f)
                 {
                     //spawn a tree
 
@@ -109,17 +117,22 @@ public class MapManager : MonoBehaviour
                 }
             }
         }
-        
+
         Debug.Log("Updating Weights");
         setNavGridWeightsFromTileMap();
         //navGrid.drawGrid();
 
-        PlaceBuilding(new Vector2Int(96, 105), buildingPrefabs[Building.BuildingType.TYPE_COTTAGE], true);
+        GameObject startingHouse = PlaceBuilding(new Vector2Int(96, 105), buildingPrefabs[Building.BuildingType.TYPE_COTTAGE], true);
         GameObject startingWarehouse = PlaceBuilding(new Vector2Int(100, 105), buildingPrefabs[Building.BuildingType.TYPE_WAREHOUSE], true);
 
-        StockInitialWarehouse(startingWarehouse.GetComponent<Building>());
-
         buildingToPlace = Building.BuildingType.TYPE_COTTAGE;
+
+        StartCoroutine(StockInitialWarehouse(startingWarehouse.GetComponent<Building>(), this.GetComponent<ResourceTracker>()));
+
+        GameObject newVillager = Instantiate(villagerPrefab, navGrid.toWorldSpace(new Vector2Int(100, 104)), Quaternion.identity);
+        newVillager.GetComponent<Villager>().map = this;
+
+
     }
 
     void Update()
@@ -299,13 +312,17 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    private void StockInitialWarehouse(Building w)
+    IEnumerator StockInitialWarehouse(Building w, ResourceTracker r)
     {
-        w.AddResource(new TownResource(TownResourceID.RESOURCE_WOOD, 100));
-        w.AddResource(new TownResource(TownResourceID.RESOURCE_STONE, 100));
-        w.AddResource(new TownResource(TownResourceID.RESOURCE_METAL, 50));
-        w.AddResource(new TownResource(TownResourceID.RESOURCE_TOOL, 50));
-        w.AddResource(new TownResource(TownResourceID.RESOURCE_FOOD, 100));
-        this.GetComponent<ResourceTracker>().UpdateResourceCounts();
+        yield return new WaitForSeconds(0);
+
+        w.AddResource(TownResourceID.RESOURCE_WOOD, 100);
+        w.AddResource(TownResourceID.RESOURCE_STONE, 100);
+        w.AddResource(TownResourceID.RESOURCE_METAL, 50);
+        w.AddResource(TownResourceID.RESOURCE_TOOL, 50);
+        w.AddResource(TownResourceID.RESOURCE_FOOD, 100);
+
+        r.UpdateResourceCounts();
+        r.UpdateUI();
     }
 }
