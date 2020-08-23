@@ -25,13 +25,18 @@ public class CameraManager : MonoBehaviour
     [Range(1.0f, 100.0f)]
     public float maxZoom = 50.0f;
 
+    private void Start()
+    {
+        // start a bit zoomed otu
+        Camera.main.orthographicSize *= 2.0f;
+    }
+
     // Update is called once per frame
     void Update()
     {
         // Use PageUp and PageDown to zoom out and in
         // Hold arrow keys to pan the camera
         // Hold Shift to pan faster
-        // mainCamera.orthographicSize
         Vector3 pan = Vector3.zero;
         pan = getKeyMovement(pan);
 

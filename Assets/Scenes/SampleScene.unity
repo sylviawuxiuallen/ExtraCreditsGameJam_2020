@@ -715,9 +715,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c47a8adb3a24f384b8e9094ce2c1f7a9, type: 2}
   __TILEWEIGHT_KEY: 00000000010000000200000003000000
   __TILEWEIGHT_VALUE: 050000000700000001000000ffffffff
-  __BUILDINGPREFABS_KEY: 00000000
+  __BUILDINGPREFABS_KEY: 0000000001000000
   __BUILDINGPREFABS_VALUE:
-  - {fileID: 930506819053063753, guid: 0c6827fd0279fac4eb0c97859f26d1a8, type: 3}
+  - {fileID: 3170467679165749693, guid: a7e7f2d3cd86cbb4fb1215c0fa4ba7f4, type: 3}
+  - {fileID: 3170467679165749693, guid: 44ed4edc27434be4fb53a55a119e6586, type: 3}
 --- !u!4 &507773851
 Transform:
   m_ObjectHideFlags: 0
@@ -769,6 +770,10 @@ MonoBehaviour:
   - {fileID: 313671185}
   - {fileID: 266787835}
   - {fileID: 1688780204}
+  initialWood: 100
+  initialStone: 100
+  initialMetal: 100
+  initialTools: 100
 --- !u!1 &507808480
 GameObject:
   m_ObjectHideFlags: 0

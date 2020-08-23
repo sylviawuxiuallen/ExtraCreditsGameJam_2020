@@ -107,7 +107,11 @@ public class MapManager : MonoBehaviour
         Debug.Log("Updating Weights");
         setNavGridWeightsFromTileMap();
         //navGrid.drawGrid();
-        
+
+        PlaceBuilding(new Vector2Int(105, 100), buildingPrefabs[Building.BuildingType.TYPE_COTTAGE], true);
+        GameObject startingWarehouse = PlaceBuilding(new Vector2Int(100, 100), buildingPrefabs[Building.BuildingType.TYPE_WAREHOUSE], true);
+
+        StockInitialWarehouse(startingWarehouse.GetComponent<Building>());
     }
 
     void Update()
@@ -121,7 +125,7 @@ public class MapManager : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            PlaceBuilding(toGridSpace(Camera.main.ScreenToWorldPoint(Input.mousePosition)), buildingPrefabs[Building.BuildingType.TYPE_COTTAGE]);
+            PlaceBuilding(toGridSpace(Camera.main.ScreenToWorldPoint(Input.mousePosition)), buildingPrefabs[Building.BuildingType.TYPE_WAREHOUSE]);
         }
     }
 
@@ -161,7 +165,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    public bool PlaceBuilding(Vector2 startCoords, GameObject bdg)
+    public GameObject PlaceBuilding(Vector2 startCoords, GameObject bdg, bool freeBuilding = false)
     {
         int x = (int)Math.Round(startCoords.x);
         int y = (int)Math.Round(startCoords.y);
@@ -174,17 +178,28 @@ public class MapManager : MonoBehaviour
         Vector2Int minBounds = new Vector2Int(x, y);
         Vector2Int maxBounds = new Vector2Int(x + buildingWidth, y + buildingHeight);
 
+        Dictionary<TownResourceID, int> buildingCosts = newBuildingScript.ConstructionCost();
+
         if (x + buildingWidth >= mapWidth || y + buildingHeight >= mapHeight ||
             x < 0 || y < 0)
         {
             Debug.Log("Could not place building - not enough room on map!");
-            return false;
+            return null;
         }
 
         if (!CheckBuildable(minBounds, maxBounds, newBuildingScript.NaturalSiteType))
         {
             Debug.Log("Could not place building - area blocked");
-            return false;
+            return null;
+        }
+
+        if (!freeBuilding)
+        {
+            if (!this.GetComponent<ResourceTracker>().TrySpendResources(buildingCosts))
+            {
+                Debug.Log("Not enough resources");
+                return null;
+            }
         }
 
         GameObject newBuilding = Instantiate(bdg, navGrid.toWorldSpace(minBounds), Quaternion.identity);
@@ -203,9 +218,10 @@ public class MapManager : MonoBehaviour
             for (int _y = minBounds.y; _y < maxBounds.y; _y++)
             {
                 tileObjects[_x, _y].Add(obj);
+                tilemap.SetTile(new Vector3Int(_x - mapWidth / 2, _y - mapHeight / 2, 0), tiles[TileBaseType.TILEBASE_BUILDING]);
             }
         }
-        return true;
+        return newBuilding;
     }
 
     private bool CheckBuildable(Vector2Int min, Vector2Int max, NaturalSite.NaturalSiteType type)
@@ -218,7 +234,7 @@ public class MapManager : MonoBehaviour
             {
                 if( tileObjects[x,y].Count == 1)
                 {
-                    if(tileObjects[x,y][0].type == TileType.TILE_RESOURCE)
+                    if (tileObjects[x,y][0].type == TileType.TILE_RESOURCE)
                     {
                         NaturalSite ns = tileObjects[x, y][0].obj.GetComponent<NaturalSite>();
                         
@@ -229,6 +245,9 @@ public class MapManager : MonoBehaviour
                         {
                             hasSite = true;
                         }
+                    } else if(tileObjects[x, y][0].type == TileType.TILE_BUILDING)
+                    {
+                        return false;
                     }
                 }
                 if (tileObjects[x, y].Count > 1) return false;
@@ -257,5 +276,15 @@ public class MapManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    private void StockInitialWarehouse(Building w)
+    {
+        w.AddResource(new TownResource(TownResourceID.RESOURCE_WOOD, 100));
+        w.AddResource(new TownResource(TownResourceID.RESOURCE_STONE, 100));
+        w.AddResource(new TownResource(TownResourceID.RESOURCE_METAL, 10));
+        w.AddResource(new TownResource(TownResourceID.RESOURCE_TOOL, 10));
+        w.AddResource(new TownResource(TownResourceID.RESOURCE_FOOD, 100));
+        this.GetComponent<ResourceTracker>().UpdateResourceCounts();
     }
 }
