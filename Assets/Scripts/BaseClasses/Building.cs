@@ -38,7 +38,7 @@ public abstract class Building : MonoBehaviour
     public NaturalSite.NaturalSiteType NaturalSiteType; // a natural site that the building must be built on, e.g. an ore vein
     public BuildingType type;
 
-    public TownJob job;   // the jobs that the building allows
+    public TownJob[] jobs;   // the jobs that the building allows
 
     public int storageCapacity;  // the amount of resources the building can store
     public List<TownResource> storedResources;    // which resources are currently stored

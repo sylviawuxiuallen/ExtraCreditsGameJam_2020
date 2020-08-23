@@ -6,5 +6,6 @@ using UnityEngine;
 public abstract class TownJob
 {
     public Building building;
+
     public abstract void UpdateJob();
 }

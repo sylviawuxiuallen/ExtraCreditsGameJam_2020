@@ -54,6 +54,12 @@ public class MapManager : MonoBehaviour
 
     private List<TileObject>[,] tileObjects;
 
+    private Building.BuildingType buildingToPlace;
+
+    public KeyCode placeHouse = KeyCode.Alpha1;
+    public KeyCode placeWarehouse = KeyCode.Alpha2;
+    public KeyCode placeLumberMill = KeyCode.Alpha3;
+
     static int mapWidth = 200;
     static int mapHeight = 200;
     // Start is called before the first frame update
@@ -108,10 +114,12 @@ public class MapManager : MonoBehaviour
         setNavGridWeightsFromTileMap();
         //navGrid.drawGrid();
 
-        PlaceBuilding(new Vector2Int(105, 100), buildingPrefabs[Building.BuildingType.TYPE_COTTAGE], true);
-        GameObject startingWarehouse = PlaceBuilding(new Vector2Int(100, 100), buildingPrefabs[Building.BuildingType.TYPE_WAREHOUSE], true);
+        PlaceBuilding(new Vector2Int(96, 105), buildingPrefabs[Building.BuildingType.TYPE_COTTAGE], true);
+        GameObject startingWarehouse = PlaceBuilding(new Vector2Int(100, 105), buildingPrefabs[Building.BuildingType.TYPE_WAREHOUSE], true);
 
         StockInitialWarehouse(startingWarehouse.GetComponent<Building>());
+
+        buildingToPlace = Building.BuildingType.TYPE_COTTAGE;
     }
 
     void Update()
@@ -125,7 +133,20 @@ public class MapManager : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            PlaceBuilding(toGridSpace(Camera.main.ScreenToWorldPoint(Input.mousePosition)), buildingPrefabs[Building.BuildingType.TYPE_WAREHOUSE]);
+            PlaceBuilding(toGridSpace(Camera.main.ScreenToWorldPoint(Input.mousePosition)), buildingPrefabs[buildingToPlace]);
+        }
+
+        if(Input.GetKey(placeHouse))
+        {
+            buildingToPlace = Building.BuildingType.TYPE_COTTAGE;
+        }
+        if (Input.GetKey(placeWarehouse))
+        {
+            buildingToPlace = Building.BuildingType.TYPE_WAREHOUSE;
+        }
+        if (Input.GetKey(placeLumberMill))
+        {
+            buildingToPlace = Building.BuildingType.TYPE_LUMBER_MILL;
         }
     }
 
@@ -282,8 +303,8 @@ public class MapManager : MonoBehaviour
     {
         w.AddResource(new TownResource(TownResourceID.RESOURCE_WOOD, 100));
         w.AddResource(new TownResource(TownResourceID.RESOURCE_STONE, 100));
-        w.AddResource(new TownResource(TownResourceID.RESOURCE_METAL, 10));
-        w.AddResource(new TownResource(TownResourceID.RESOURCE_TOOL, 10));
+        w.AddResource(new TownResource(TownResourceID.RESOURCE_METAL, 50));
+        w.AddResource(new TownResource(TownResourceID.RESOURCE_TOOL, 50));
         w.AddResource(new TownResource(TownResourceID.RESOURCE_FOOD, 100));
         this.GetComponent<ResourceTracker>().UpdateResourceCounts();
     }
