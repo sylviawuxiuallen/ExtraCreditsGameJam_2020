@@ -180,26 +180,26 @@ public abstract class Building : MonoBehaviour
     public Dictionary<TownResourceID, int> ReserveResources(Dictionary<TownResourceID, int> requestAmounts)
     {
         return null;
-        Dictionary<TownResourceID, int> amountsReserved = new Dictionary<TownResourceID, int>();
+        //Dictionary<TownResourceID, int> amountsReserved = new Dictionary<TownResourceID, int>();
 
-        Dictionary<TownResourceID, int> available = AvailableResourcesCount();
+        //Dictionary<TownResourceID, int> available = AvailableResourcesCount();
 
-        foreach (KeyValuePair<TownResourceID, int> r in requestAmounts)
-        {
-            if (available[r.Key] >= r.Value)
-            {
-                reservedResources[r.Key] += r.Value;
-                amountsReserved.Add(r.Key, r.Value);
+        //foreach (KeyValuePair<TownResourceID, int> r in requestAmounts)
+        //{
+        //    if (available[r.Key] >= r.Value)
+        //    {
+        //        reservedResources[r.Key] += r.Value;
+        //        amountsReserved.Add(r.Key, r.Value);
 
-            } else
-            {
-                reservedResources[r.Key] += available[r.Key];
-                amountsReserved.Add(r.Key, available[r.Key]);
-            }
-        }
+        //    } else
+        //    {
+        //        reservedResources[r.Key] += available[r.Key];
+        //        amountsReserved.Add(r.Key, available[r.Key]);
+        //    }
+        //}
 
 
-        return amountsReserved;
+        //return amountsReserved;
     }
 
     public bool TryStartConstruction()

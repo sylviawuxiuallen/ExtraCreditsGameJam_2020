@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using TreeEditor;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.UIElements;
@@ -309,8 +308,8 @@ public class MapManager : MonoBehaviour
 
     private bool CheckBuildable(Vector2Int min, Vector2Int max, NaturalSite.NaturalSiteType type)
     {
-        bool hasSite = false;
-        if (type == NaturalSite.NaturalSiteType.TYPE_NONE) hasSite = true;
+        // bool hasSite = false;
+        // if (type == NaturalSite.NaturalSiteType.TYPE_NONE) hasSite = true;
         for(int x = min.x; x < max.x; x++)
         {
             for(int y = min.y; y< max.y; y++)
@@ -326,7 +325,7 @@ public class MapManager : MonoBehaviour
                             return false;
                         } else
                         {
-                            hasSite = true;
+                            // hasSite = true;
                         }
                     } else if(tileObjects[x, y][0].type == TileType.TILE_BUILDING)
                     {
