@@ -128,8 +128,6 @@ public class Villager : MonoBehaviour
 
     public void assignHaulTask(JobHaulTask task)
     {
-        Debug.Log("Haul task assigned");
-
         haulTask = task;
         isHauling = true;
         //recalculate path
@@ -153,7 +151,23 @@ public class Villager : MonoBehaviour
             //do work task
             if (!workTask.finished)
             {
-                //there actually exists a task.
+                if(position == workTask.building.entrance)
+                {
+                    workTask.progress += 0.5f;  // Note: this is how often UpdateVillager is invoked
+                    if(workTask.progress >= workTask.timeToComplete)
+                    {
+                        // task completed
+                        // note: the task never checks if this resource is available, so it may go into negatives!
+                        // should be fixed later
+                        workTask.building.RemoveResource(workTask.consumed, workTask.consumedAmount);
+                        workTask.building.AddResource(workTask.produced, workTask.producedAmount);
+                        workTask.job.inProgress = false;
+                        workTask.finished = true;
+                        this.isWorking = false;
+                    }
+                } else {
+                    setPath(position, workTask.building.entrance);
+                }
 
             }
         } else
@@ -176,7 +190,7 @@ public class Villager : MonoBehaviour
                         {
                             carriedResource = new TownResource(haulTask.item, 0);
                             //how many resources does the building have?
-                            if (haulTask.from.storedResources[tr] < 100)
+                            if (haulTask.from.storedResources[tr] < haulTask.amount)
                             {
                                 //can take all
                                 carriedResource.id = haulTask.item;
@@ -193,8 +207,8 @@ public class Villager : MonoBehaviour
                             {
                                 //take a portion.
                                 carriedResource.id = haulTask.item;
-                                carriedResource.amount = 100;
-                                haulTask.from.RemoveResource(haulTask.item, 100);
+                                carriedResource.amount = haulTask.amount;
+                                haulTask.from.RemoveResource(haulTask.item, haulTask.amount);
                             }
                         }
                     }
@@ -259,9 +273,12 @@ public class Villager : MonoBehaviour
         yield return new WaitUntil(() => handle.IsCompleted);
         handle.Complete();
         path = new NavPath(job.path, job.pathLength);
-        pathFrom = map.navGrid.toWorldSpace(path.path[0]);
-        pathTo = map.navGrid.toWorldSpace(path.path[1]);
-        pathAlpha = 0;
+        if (path.path.Count > 1)
+        {
+            pathFrom = map.navGrid.toWorldSpace(path.path[0]);
+            pathTo = map.navGrid.toWorldSpace(path.path[1]);
+            pathAlpha = 0;
+        }
         job.path.Dispose();
         job.grid.weights.Dispose();
         job.pathLength.Dispose();

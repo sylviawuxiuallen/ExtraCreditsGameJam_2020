@@ -47,10 +47,11 @@ MonoBehaviour:
   height: 5
   position: {x: 0, y: 0}
   entrance: {x: 2, y: 0}
-  isConstructed: 0
+  resourcesOrdered: 0
   underConstruction: 0
+  isConstructed: 0
   builtPercentage: 0
-  constructionTime: 0
+  constructionTime: 5
   NaturalSiteType: 0
   type: 7
   storageCapacity: 10

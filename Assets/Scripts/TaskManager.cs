@@ -27,38 +27,51 @@ public class TaskManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // remove completed tasks
-        // haulTasks.RemoveAll(t => t.finished);
-
         // check unfinished buildings
-        // foreach(Building b in mapManager.buildings)
-        // {
-
-        // }
-
-        // test task - create a task to move wood to house
-        if(unassignedHaulTasks.Count == 0)
+        foreach(Building b in mapManager.buildings)
         {
-            foreach(Building b in mapManager.buildings)
+            if (!b.isConstructed && !b.underConstruction && !b.resourcesOrdered)
             {
-                if(b.type == Building.BuildingType.TYPE_WAREHOUSE)
+                b.InitializeStoredResources();
+                Dictionary<TownResourceID, int> resourcesToGet = b.ResourcesNeededToBuild();
+
+                foreach(KeyValuePair<TownResourceID, int> r in resourcesToGet)
                 {
-                    foreach(Building b2 in mapManager.buildings)
+                    if(r.Value > 0)
                     {
-                        if (b2.type == Building.BuildingType.TYPE_COTTAGE)
+                        JobHaulTask newTask = new JobHaulTask();
+                        newTask.from = gameObject.GetComponent<ResourceTracker>().FindResourceStock(r);
+                        newTask.to = b;
+                        newTask.item = r.Key;
+                        newTask.amount = r.Value;
+                        newTask.stage = 0; //0 - going to from. 1 - going to to
+                        newTask.finished = false;
+
+                        unassignedHaulTasks.Add(newTask);
+                    }
+                }
+
+                b.resourcesOrdered = true;
+            } else if(b.isConstructed)
+            {
+                if(b.jobs != null)
+                {
+                    foreach(TownJob j in b.jobs)
+                    {
+                        if(!j.inProgress)
                         {
-                            Debug.Log("creating task");
+                            JobWorkTask newTask = new JobWorkTask();
+                            newTask.job = j;
+                            newTask.building = b;
+                            newTask.consumed = j.consumed;
+                            newTask.consumedAmount = j.consumedAmount;
+                            newTask.produced = j.produced;
+                            newTask.producedAmount = j.producedAmount;
+                            newTask.timeToComplete = j.timeToFinish;
 
-                            JobHaulTask newTask = new JobHaulTask();
-                            newTask.from = b;
-                            newTask.to = b2;
-                            newTask.item = TownResourceID.RESOURCE_WOOD;
-                            newTask.amount = 1;
-                            newTask.stage = 0; //0 - going to from. 1 - going to to
-                            newTask.finished = false;
+                            j.inProgress = true;
 
-                            unassignedHaulTasks.Add(newTask);
-
+                            unassignedWorkTasks.Add(newTask);
                         }
                     }
                 }
@@ -72,10 +85,17 @@ public class TaskManager : MonoBehaviour
     {
         foreach(Villager v in mapManager.villagers)
         {
-            if(!v.isWorking && !v.isHauling && unassignedHaulTasks.Count > 0)
+            if(!v.isWorking && !v.isHauling)
             {
-                v.assignHaulTask(unassignedHaulTasks[0]);
-                unassignedHaulTasks.RemoveAt(0);
+                if (unassignedHaulTasks.Count > 0)
+                {
+                    v.assignHaulTask(unassignedHaulTasks[0]);
+                    unassignedHaulTasks.RemoveAt(0);
+                } else if(unassignedWorkTasks.Count > 0)
+                {
+                    v.assignWorkTask(unassignedWorkTasks[0]);
+                    unassignedWorkTasks.RemoveAt(0);
+                }
             }
         }
     }
@@ -92,9 +112,12 @@ public class TaskManager : MonoBehaviour
 
 public struct JobWorkTask
 {
+    public TownJob job;
     public Building building;
-    public TownResource consumed;
-    public TownResource produced;
+    public TownResourceID consumed;
+    public int consumedAmount;
+    public TownResourceID produced;
+    public int producedAmount;
     public float timeToComplete;
     public float progress;
     public bool finished;

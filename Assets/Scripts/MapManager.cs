@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using TreeEditor;
@@ -60,8 +61,15 @@ public class MapManager : MonoBehaviour
     public KeyCode placeHouse = KeyCode.Alpha1;
     public KeyCode placeWarehouse = KeyCode.Alpha2;
     public KeyCode placeLumberMill = KeyCode.Alpha3;
+    public KeyCode placeQuarry = KeyCode.Alpha4;
+    public KeyCode placeMine = KeyCode.Alpha5;
+    public KeyCode placeFarm = KeyCode.Alpha6;
+    public KeyCode placeBakery = KeyCode.Alpha7;
+    public KeyCode placeSmithy = KeyCode.Alpha8;
 
     public GameObject villagerPrefab;
+
+    private float villagerSpawnTimer;
 
     static int mapWidth = 200;
     static int mapHeight = 200;
@@ -130,9 +138,11 @@ public class MapManager : MonoBehaviour
 
         StartCoroutine(StockInitialWarehouse(startingWarehouse.GetComponent<Building>(), this.GetComponent<ResourceTracker>()));
 
-        GameObject newVillager = Instantiate(villagerPrefab, navGrid.toWorldSpace(new Vector2Int(100, 110)), Quaternion.identity);
+        GameObject newVillager = Instantiate(villagerPrefab, navGrid.toWorldSpace(new Vector2Int(100, 100)), Quaternion.identity);
         newVillager.GetComponent<Villager>().map = this;
         villagers.Add(newVillager.GetComponent<Villager>());
+
+        villagerSpawnTimer = 1000.0f;
     }
 
     void Update()
@@ -160,6 +170,40 @@ public class MapManager : MonoBehaviour
         if (Input.GetKey(placeLumberMill))
         {
             buildingToPlace = Building.BuildingType.TYPE_LUMBER_MILL;
+        }
+        if (Input.GetKey(placeQuarry))
+        {
+            buildingToPlace = Building.BuildingType.TYPE_QUARRY;
+        }
+        if (Input.GetKey(placeMine))
+        {
+            buildingToPlace = Building.BuildingType.TYPE_MINE;
+        }
+        if (Input.GetKey(placeFarm))
+        {
+            buildingToPlace = Building.BuildingType.TYPE_FARM;
+        }
+        if (Input.GetKey(placeBakery))
+        {
+            buildingToPlace = Building.BuildingType.TYPE_BAKERY;
+        }
+        if (Input.GetKey(placeSmithy))
+        {
+            buildingToPlace = Building.BuildingType.TYPE_SMITHY;
+        }
+
+        VillagerSpawnTimerUpdate();
+    }
+
+    private void VillagerSpawnTimerUpdate()
+    {
+        villagerSpawnTimer -= gameObject.GetComponent<ResourceTracker>().resourceCounts[TownResourceID.RESOURCE_FOOD] * Time.deltaTime;
+        if (villagerSpawnTimer <= 0.0f)
+        {
+            GameObject newVillager = Instantiate(villagerPrefab, navGrid.toWorldSpace(new Vector2Int(100, 100)), Quaternion.identity);
+            newVillager.GetComponent<Villager>().map = this;
+            villagers.Add(newVillager.GetComponent<Villager>());
+            villagerSpawnTimer = 1000.0f * villagers.Count;
         }
     }
 
@@ -292,7 +336,8 @@ public class MapManager : MonoBehaviour
                 if (tileObjects[x, y].Count > 1) return false;
             }
         }
-        return hasSite;
+        // return hasSite;
+        return true;    // since natural sites haven't been implemented yet, just ignore this restriction
     }
 
     public void moveVillager(Vector2Int from, Vector2Int to, int Id)
