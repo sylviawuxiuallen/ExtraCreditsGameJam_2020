@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Unity.Collections;
 using Unity.Jobs;
 using UnityEditor;
 using UnityEngine;
@@ -64,7 +65,7 @@ public class Villager : MonoBehaviour
         pathFrom = transform.position;
         position = map.toGridSpace(pathTo);
 
-        setPath(position, position + new Vector2Int(0, -3));
+        setPath(position, position + new Vector2Int(-100, -100));
 
         // InvokeRepeating("UpdateVillager", 0.0f, 0.5f);
     }
@@ -73,10 +74,15 @@ public class Villager : MonoBehaviour
     {
         if (pathAlpha > 0.95f)
         {
-
             if (path.path.Count == 0 || path.positionInPath == path.path.Count - 1)
             {
-                //No more path.
+                //No more path
+                pathAlpha = 1;
+                setPath(position, new Vector2Int(Mathf.FloorToInt(Random.value * 100), Mathf.FloorToInt(Random.value * 100)));
+            }
+            else
+            {
+                //There is more path
                 pathAlpha = 0;
                 position = map.toGridSpace(pathTo);
                 map.moveVillager(map.toGridSpace(pathFrom), map.toGridSpace(pathTo), ID);
@@ -84,19 +90,19 @@ public class Villager : MonoBehaviour
                 path.positionInPath++;
                 pathTo = map.navGrid.toWorldSpace(path.path[path.positionInPath]);
                 //is new coords blocked?
-                if(map.navGrid.weights[path.path[path.positionInPath].x, path.path[path.positionInPath].y] == -1)
+                if (map.navGrid.weights[path.path[path.positionInPath].x, path.path[path.positionInPath].y] == -1)
                 {
                     //blocked, recalculate path.
-                    setPath(position, path.path[path.path.Count -1]);
+                    setPath(position, path.path[path.path.Count - 1]);
                     pathTo = pathFrom;
                 }
             }
-            else
-            {
-                //more path, move along path.
-                pathAlpha += Time.deltaTime * 5;
-                transform.position = Vector3.Lerp(pathFrom, pathTo, pathAlpha);
-            }
+            
+        } else
+        {
+            //more path, move along path.
+            pathAlpha += Time.deltaTime * 5;
+            transform.position = Vector3.Lerp(pathFrom, pathTo, pathAlpha);
         }
     }
 
@@ -212,12 +218,14 @@ public class Villager : MonoBehaviour
     {
         public Vector2Int from;
         public Vector2Int to;
-        public NavPath path;
-        public NavGrid grid;
+        public NativeArray<Vector2Int> path;
+        public NativeArray<int> pathLength;
+        public NavGrid.NavGridData grid;
 
         public void Execute()
         {
-            path = grid.findPath(from, to);
+            NavGrid nav = new NavGrid(grid);
+            path = nav.findPath(from, to, pathLength).toNativeArray(path);
         }
     }
     public void setPath(Vector2Int from, Vector2Int to)
@@ -225,9 +233,9 @@ public class Villager : MonoBehaviour
         getPathJob job = new getPathJob();
         job.from = from;
         job.to = to;
-        job.path = new NavPath();
-        job.grid = map.navGrid;
-
+        job.grid = map.navGrid.toGridData();
+        job.path = new NativeArray<Vector2Int>(1000, Allocator.Persistent);
+        job.pathLength = new NativeArray<int>(1, Allocator.Persistent);
         JobHandle handle = job.Schedule();
         //once finished, set the path
         StartCoroutine(WaitForPathFinding(handle,job));
@@ -236,6 +244,14 @@ public class Villager : MonoBehaviour
     private IEnumerator WaitForPathFinding(JobHandle handle, getPathJob job)
     {
         yield return new WaitUntil(() => handle.IsCompleted);
-        path = job.path;
+        handle.Complete();
+        path = new NavPath(job.path, job.pathLength);
+        pathFrom = map.navGrid.toWorldSpace(path.path[0]);
+        pathTo = map.navGrid.toWorldSpace(path.path[1]);
+        pathAlpha = 0;
+        job.path.Dispose();
+        job.grid.weights.Dispose();
+        job.pathLength.Dispose();
+
     }
 }

@@ -2,15 +2,58 @@
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
 public class NavGrid
 {
+
+    public struct NavGridData
+    {
+        public NativeArray<int> weights;
+        public float resolution;
+        public int width;
+        public int height;
+    }
+
     public int[,] weights;
     public float resolution = 1f;
     public int width;
     public int height;
+
+    public NavGrid() { }
+
+    public NavGrid(NavGridData d)
+    {
+        width = d.width;
+        height = d.height;
+        weights = new int[width, height];
+        for(int i = 0; i < width; i++)
+            for(int j = 0; j < height; j++)
+                weights[i, j] = d.weights[j + i * height];
+
+        resolution = d.resolution;
+    }
+
+    public NavGridData toGridData()
+    {
+        NavGridData data = new NavGridData();
+        data.height = height;
+        data.width = width;
+        data.resolution = resolution;
+
+        data.weights = new NativeArray<int>(width * height, Allocator.Persistent);
+
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                data.weights[j + i*height] = weights[i, j];
+            }
+        }
+        return data;
+    }
 
     /// <summary>
     /// Converts a world position to grid space.
@@ -64,10 +107,9 @@ public class NavGrid
     /// <param name="start">Start of the path.</param>
     /// <param name="end">End of the path.</param>
     /// <returns>Path to the end from start.</returns>
-    public NavPath findPath(Vector2Int start, Vector2Int end)
+    public NavPath findPath(Vector2Int start, Vector2Int end, NativeArray<int> pathLength)
     {
         NavPath path = new NavPath();
-        path.grid = this;
         //uses A* alg.
         //head towards point, if run into wall, then branch out. 
         char[,] checkedLocations = new char[width, height];
@@ -187,6 +229,7 @@ public class NavGrid
                 }
             }
         }
+        pathLength[0] = path.path.Count;
         return path;
     }
 
@@ -280,17 +323,6 @@ public class NavGrid
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///// Overloads /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /// <summary>
-    /// Returns a path from the start to the end.
-    /// </summary>
-    /// <param name="start">Start of the path.</param>
-    /// <param name="end">End of the path.</param>
-    /// <returns>Path to the end from start.</returns>
-    public NavPath findPath(Vector3 start, Vector3 end)
-    {
-        return findPath(toGridSpace(start), toGridSpace(end));
-    }
 
     /// <summary>
     /// Sets the pathing weight of a grid point.
