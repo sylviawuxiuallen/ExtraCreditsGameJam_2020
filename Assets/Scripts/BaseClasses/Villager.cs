@@ -26,6 +26,8 @@ public class Villager : MonoBehaviour
     public int ID;
     public Vector2Int position;
 
+    public string villagerName;
+
     public int age;
     public bool gender;
     public bool gay;
@@ -52,12 +54,15 @@ public class Villager : MonoBehaviour
 
     void Start()
     {
+        manager = GameObject.Find("MapManager").GetComponent<TaskManager>();
+
         baseCarryCapacity = 100;
         path = new NavPath();
         age = 21;
         gay = false;
         pathAlpha = 0;
         isWorking = false;
+        currentJob = VillagerJob.IDLE;
 
         haulTask.finished = true;
 
@@ -123,8 +128,10 @@ public class Villager : MonoBehaviour
 
     public void assignHaulTask(JobHaulTask task)
     {
+        Debug.Log("Haul task assigned");
+
         haulTask = task;
-        isWorking = false;
+        isHauling = true;
         //recalculate path
         setPath(position, haulTask.from.entrance);
     }
@@ -207,8 +214,9 @@ public class Villager : MonoBehaviour
                     } else
                     {
                         //task is over. it's done.
-                        manager.jobFinished(this);
+                        manager.haulTaskFinished(this, haulTask);
                         haulTask.finished = true;
+                        this.isHauling = false;
                     }
                 }
             }

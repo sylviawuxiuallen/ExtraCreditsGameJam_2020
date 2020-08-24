@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Experimental.U2D.Animation;
 
 public abstract class Building : MonoBehaviour
 {
@@ -30,8 +31,8 @@ public abstract class Building : MonoBehaviour
     public Vector2Int position; // bottom-left corner
     public Vector2Int entrance; // relative to position
 
+    bool underConstruction;
     public bool isConstructed;
-    public bool underConstruction;
     public float builtPercentage = 0.0f;
     public float constructionTime;  // amount of time, in seconds, required to create the building
 
@@ -57,20 +58,16 @@ public abstract class Building : MonoBehaviour
 
     private void Start()
     {
-        isConstructed = false;
-        underConstruction = true;
-
         InitializeStoredResources();
     }
 
     private void Update()
     {
-        if(underConstruction)
+        if(!isConstructed)
         {
             builtPercentage += 100.0f * Time.deltaTime / constructionTime;
             if (builtPercentage >= 100.0f)
             {
-                underConstruction = false;
                 isConstructed = true;
                 Debug.Log("Construction completed!");
             }
@@ -139,4 +136,28 @@ public abstract class Building : MonoBehaviour
         }
     }
 
+    public bool TryStartConstruction()
+    {
+        foreach (TownResourceID r in System.Enum.GetValues(typeof(TownResourceID)))
+        {
+            if (storedResources[r] < ConstructionCost()[r])
+            {
+                return false;
+            }
+        }
+
+        foreach (TownResourceID r in System.Enum.GetValues(typeof(TownResourceID)))
+        {
+            storedResources[r] -= ConstructionCost()[r];
+
+        }
+        return true;
+    }
+
+    public Dictionary<TownResourceID, int> ResourcesNeeded()
+    {
+
+
+        return null;
+    }
 }

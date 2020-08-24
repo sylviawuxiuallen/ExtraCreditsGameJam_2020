@@ -229,9 +229,11 @@ public class NavGrid
                 }
             }
         }
+        
+        path.path.Add(end); // ugly hack to fix pathing bug!
+
         pathLength[0] = path.path.Count;
 
-        path.path[path.path.Count - 1] = end;   // ugly hack!
 
         return path;
     }

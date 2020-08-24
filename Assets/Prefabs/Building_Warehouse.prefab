@@ -50,7 +50,7 @@ MonoBehaviour:
   isConstructed: 0
   underConstruction: 0
   builtPercentage: 0
-  constructionTime: 0
+  constructionTime: 20
   NaturalSiteType: 0
   type: 1
   storageCapacity: 500

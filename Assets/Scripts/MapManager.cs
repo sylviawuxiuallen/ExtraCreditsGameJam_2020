@@ -39,6 +39,7 @@ public class MapManager : MonoBehaviour
     public GameObject Resource_Ore;
 
     public List<Building> buildings;
+    public List<Villager> villagers;
 
     private Dictionary<TileBaseType,TileBase> tiles;
     public List<TileBaseType> __TILES_KEY;
@@ -131,24 +132,7 @@ public class MapManager : MonoBehaviour
 
         GameObject newVillager = Instantiate(villagerPrefab, navGrid.toWorldSpace(new Vector2Int(100, 110)), Quaternion.identity);
         newVillager.GetComponent<Villager>().map = this;
-
-        JobHaulTask t = new JobHaulTask();
-        t.from = startingWarehouse.GetComponent<Building>();
-        t.to = startingHouse.GetComponent<Building>();
-        t.item = TownResourceID.RESOURCE_WOOD;
-        t.amount = 0;
-        t.stage = 0;
-        t.finished = false;
-
-        StartCoroutine(GiveVillagerJob(newVillager.GetComponent<Villager>(), t));
-    }
-
-    IEnumerator GiveVillagerJob(Villager v, JobHaulTask t)
-    {
-        yield return new WaitForSeconds(0);
-
-        v.GetComponent<Villager>().assignHaulTask(t);
-
+        villagers.Add(newVillager.GetComponent<Villager>());
     }
 
     void Update()
@@ -253,6 +237,11 @@ public class MapManager : MonoBehaviour
         }
 
         GameObject newBuilding = Instantiate(bdg, navGrid.toWorldSpace(minBounds), Quaternion.identity);
+
+        if(freeBuilding)
+        {
+            newBuilding.GetComponent<Building>().isConstructed = true;
+        }
 
         TileObject obj = new TileObject();
         obj.type = TileType.TILE_BUILDING;
