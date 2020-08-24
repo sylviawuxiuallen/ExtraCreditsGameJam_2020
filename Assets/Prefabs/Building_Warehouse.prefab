@@ -47,15 +47,17 @@ MonoBehaviour:
   height: 3
   position: {x: 0, y: 0}
   entrance: {x: 1, y: 0}
+  isConstructed: 0
+  underConstruction: 0
   builtPercentage: 0
   constructionTime: 0
   NaturalSiteType: 0
   type: 1
   storageCapacity: 500
-  storedResources: []
   housingCapacity: 0
   woodCost: 20
   stoneCost: 20
   metalCost: 0
   toolCost: 0
   glassCost: 0
+  resourceTracker: {fileID: 0}

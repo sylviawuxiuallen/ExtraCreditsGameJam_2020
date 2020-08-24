@@ -230,6 +230,9 @@ public class NavGrid
             }
         }
         pathLength[0] = path.path.Count;
+
+        path.path[path.path.Count - 1] = end;   // ugly hack!
+
         return path;
     }
 

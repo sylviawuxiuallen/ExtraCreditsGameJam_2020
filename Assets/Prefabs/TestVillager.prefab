@@ -254,6 +254,7 @@ MonoBehaviour:
   map: {fileID: 0}
   manager: {fileID: 0}
   isWorking: 0
+  isHauling: 0
 --- !u!1 &1908675241073703056
 GameObject:
   m_ObjectHideFlags: 0

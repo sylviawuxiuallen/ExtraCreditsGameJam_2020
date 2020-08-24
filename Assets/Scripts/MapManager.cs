@@ -129,9 +129,25 @@ public class MapManager : MonoBehaviour
 
         StartCoroutine(StockInitialWarehouse(startingWarehouse.GetComponent<Building>(), this.GetComponent<ResourceTracker>()));
 
-        GameObject newVillager = Instantiate(villagerPrefab, navGrid.toWorldSpace(new Vector2Int(100, 104)), Quaternion.identity);
+        GameObject newVillager = Instantiate(villagerPrefab, navGrid.toWorldSpace(new Vector2Int(100, 110)), Quaternion.identity);
         newVillager.GetComponent<Villager>().map = this;
 
+        JobHaulTask t = new JobHaulTask();
+        t.from = startingWarehouse.GetComponent<Building>();
+        t.to = startingHouse.GetComponent<Building>();
+        t.item = TownResourceID.RESOURCE_WOOD;
+        t.amount = 0;
+        t.stage = 0;
+        t.finished = false;
+
+        StartCoroutine(GiveVillagerJob(newVillager.GetComponent<Villager>(), t));
+    }
+
+    IEnumerator GiveVillagerJob(Villager v, JobHaulTask t)
+    {
+        yield return new WaitForSeconds(0);
+
+        v.GetComponent<Villager>().assignHaulTask(t);
 
     }
 

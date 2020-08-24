@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Unity.Collections;
@@ -47,27 +48,27 @@ public class Villager : MonoBehaviour
 
     Villager()
     {
+    }
+
+    void Start()
+    {
         baseCarryCapacity = 100;
         path = new NavPath();
         age = 21;
-        // gender = 0.5f > Random.value;
         gay = false;
         pathAlpha = 0;
         isWorking = false;
 
         haulTask.finished = true;
-    }
 
-    void Start()
-    {
         gender = 0.5f > Random.value;
         pathTo = transform.position;
         pathFrom = transform.position;
         position = map.toGridSpace(pathTo);
 
-        setPath(position, position + new Vector2Int(-100, -100));
+        // setPath(position, position + new Vector2Int(0, -4));
 
-        // InvokeRepeating("UpdateVillager", 0.0f, 0.5f);
+        InvokeRepeating("UpdateVillager", 0.0f, 0.5f);
     }
 
     void FixedUpdate()
@@ -77,8 +78,9 @@ public class Villager : MonoBehaviour
             if (path.path.Count == 0 || path.positionInPath == path.path.Count - 1)
             {
                 //No more path
+                position = map.toGridSpace(pathTo);
                 pathAlpha = 1;
-                setPath(position, new Vector2Int(Mathf.FloorToInt(Random.value * 100), Mathf.FloorToInt(Random.value * 100)));
+                // setPath(position, new Vector2Int(Mathf.FloorToInt(Random.value * 100), Mathf.FloorToInt(Random.value * 100)));
             }
             else
             {
@@ -144,7 +146,7 @@ public class Villager : MonoBehaviour
             //do work task
             if (!workTask.finished)
             {
-                //there actually exists a task.v
+                //there actually exists a task.
 
             }
         } else
@@ -152,25 +154,28 @@ public class Villager : MonoBehaviour
             //do hauling task
             if (!haulTask.finished)
             {
+                // Debug.Log(position + ", " + haulTask.from.entrance);
                 //there actually exists a task.
-                if(position == haulTask.from.entrance && haulTask.stage == 0)
+                if (position == haulTask.from.entrance && haulTask.stage == 0)
                 {
                     //am currently at the giver
                     setPath(position, haulTask.to.entrance);
                     //take resource from building.
-                    
-                    foreach(KeyValuePair<TownResourceID, int> tr in haulTask.from.storedResources)
+
+                    // foreach (KeyValuePair<TownResourceID, int> tr in haulTask.from.storedResources)
+                    foreach (TownResourceID tr in System.Enum.GetValues(typeof(TownResourceID)))
                     {
-                        if(tr.Key == haulTask.item)
+                        if(tr == haulTask.item)
                         {
+                            carriedResource = new TownResource(haulTask.item, 0);
                             //how many resources does the building have?
-                            if (tr.Value < 100)
+                            if (haulTask.from.storedResources[tr] < 100)
                             {
                                 //can take all
                                 carriedResource.id = haulTask.item;
-                                if(haulTask.amount > tr.Value)
+                                if(haulTask.amount > haulTask.from.storedResources[tr])
                                 {
-                                    carriedResource.amount = tr.Value;
+                                    carriedResource.amount = haulTask.from.storedResources[tr];
                                 } else
                                 {
                                     carriedResource.amount = haulTask.amount;
